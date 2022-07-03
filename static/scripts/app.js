@@ -1,5 +1,5 @@
 // Define the base API URI without the trailing slash
-var BASE_REDIRECT_URI = 'http://localhost:8080';
+var BASE_REDIRECT_URI = 'https://donate.cocytus.services';
 
 // Define and initialise up the form
 var form = new Vue({
@@ -80,13 +80,13 @@ var form = new Vue({
             // Construct a button URL
             var url = 'https://www.paypal.com/cgi-bin/webscr' +
                         '?cmd=_donations' +                                                           // This is a donation
-                        '&business=cocytus@sassyfoods.net' +                                          // Send it to Cocytus Services
+                        '&business=paypal@cocytus.services' +                                         // Send it to Cocytus Services
                         '&item_name=Keep Cocytus up and running' +                                    // Donation cause/name
                         '&no_note=1' +                                                                // Disable the note field
                         '&currency_code=AUD' +                                                        // Accept AUD
                         '&amount=' + this.amount +                                                    // The donation amount in dollars
                         '&notify_url=' + encodeURIComponent(BASE_REDIRECT_URI + '/paypal/donation') + // The return URL to send confirmation to
-                        '&image_url=https://i.imgur.com/bkvytpE.png' +                                // Image shown as the recipient's icon (SFP Logo)
+                        '&image_url=https://cocytus.services/logo.png' +                                // Image shown as the recipient's icon (SFP Logo)
                         (this.anonymous ? '' : '&custom=' + this.discordId);                          // Pass our Discord ID to verify who made the donation (if not anonymous)
 
             // Lock the form
