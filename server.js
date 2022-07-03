@@ -1,8 +1,8 @@
 // Config variables
-var CLIENT_ID = ""
-var CLIENT_SECRET = ""
-var PORT = 8080;
-var BASE_REDIRECT_URI = "http://localhost:8080";
+var CLIENT_ID = process.env.CLIENT_ID;
+var CLIENT_SECRET = process.env.CLIENT_SECRET;
+var PORT = process.env.PORT || 8080;
+var BASE_REDIRECT_URI = process.env.REDIRECT_URI || "http://localhost:8080";
 
 // Node module imports
 var express = require('express');
@@ -16,7 +16,7 @@ var uuid = require('uuid/v4');
 
 // Node module instantiation
 var app = express();
-var db = new sqlite3('donations.db', { verbose: console.log });
+var db = new sqlite3('./db/donations.db', { verbose: console.log });
 
 // Initialise the database if it's empty
 // Get a list of tables in the database
