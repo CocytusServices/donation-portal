@@ -147,6 +147,7 @@ function db_getDonated(startDate, endDate) {
 // Get the top donators and how much they have donated between the given dates
 // Returns an array of objects containing name, avatar, and total donation
 // Format: [{name:str, avatar:str, total:float}, ...]
+// TODO: Convert to Sequelize
 function db_getLeaderboard(startDate, endDate, limit = 10) {
     // Set up our initial statement and parameters
     // We will add to these as we build the query and execute it later
