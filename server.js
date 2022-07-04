@@ -73,6 +73,7 @@ if (!anonymousDonorId) {
 // SQL convenience functions
 
 // Get how much has been donated between the given start and end dates
+// TODO: Convert to Sequelize
 function db_getFunds(startDate, endDate) {
     var query = 'SELECT SUM(amount - fee) AS total FROM transactions';
     var params = {};
@@ -96,6 +97,7 @@ function db_getFunds(startDate, endDate) {
 }
 
 // Get how much has been sucked out by PayPal between the given start and end dates
+// TODO: Convert to Sequelize
 function db_getFees(startDate, endDate) {
     var query = 'SELECT SUM(fee) AS total FROM transactions';
     var params = {};
@@ -119,6 +121,7 @@ function db_getFees(startDate, endDate) {
 }
 
 // Get the total amount donated between the given start and end dates
+// TODO: Convert to Sequelize
 function db_getDonated(startDate, endDate) {
     var query = 'SELECT SUM(amount - fee) AS total FROM transactions';
     var params = {};
