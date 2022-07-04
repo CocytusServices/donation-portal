@@ -98,26 +98,34 @@ function db_getFunds(startDate, endDate) {
 }
 
 // Get how much has been sucked out by PayPal between the given start and end dates
-// TODO: Convert to Sequelize
 function db_getFees(startDate, endDate) {
-    var query = 'SELECT SUM(fee) AS total FROM transactions';
-    var params = {};
+    var total = "";
 
     // Determine the kind of date filtering we'll be using
     if (startDate && endDate) { // Between two dates
-        query += ' WHERE DATETIME(timestamp, \'unixepoch\', \'utc\') BETWEEN $startDate AND $endDate';
-        params['startDate'] = startDate;
-        params['endDate'] = endDate;
+        total = txns.sum('fee', { 
+            where: { 
+                timestamp: { 
+                    [Op.gt]: startDate,
+                    [Op.lt]: endDate 
+                }
+            }
+        });
     } else if (startDate) { // After a certain date
-        query += ' WHERE DATETIME(timestamp, \'unixepoch\', \'utc\') >= $startDate';
-        params['startDate'] = startDate;
+        total = txns.sum('fee', { 
+            where: { 
+                timestamp: { [Op.gt]: startDate }
+            }
+        } );
     } else if (endDate) { // Before a certain date
-        query += ' WHERE DATETIME(timestamp, \'unixepoch\', \'utc\') <= $endDate';
-        params['endDate'] = endDate;
+        total = txns.sum('fee', { 
+            where: { 
+                timestamp: { [Op.lt]: endDate }
+            }
+        });
     }
 
     // Run the query
-    var total = db.prepare(query).get(params).total;
     return total ? total : 0;
 }
 
