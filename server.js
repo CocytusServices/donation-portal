@@ -8,7 +8,7 @@ var BASE_REDIRECT_URI = process.env.REDIRECT_URI || "http://localhost:8080";
 // Node module imports
 var express = require('express');
 var session = require('express-session');
-var sqlitestore = require('connect-sqlite3')(session);
+var sessionStore = require('express-session-sequelize')(expressSession.Store);
 var request = require('request-promise');
 var ipn = require('express-ipn');
 var bodyParser = require('body-parser');
@@ -18,6 +18,7 @@ var uuid = require('uuid/v4');
 // Node module instantiation
 var app = express();
 var db = new sequelize(DB_URI);
+var sequelizeSessionStore = new sessionStore({db: db});
 
 var donors = db.define("donor", {
     id: {
@@ -185,7 +186,7 @@ app.use(express.static(__dirname + '/static'));
 app.use(bodyParser.urlencoded({extended: false}));
 app.use(session({
     secret: 'someSecretIdkWhyIsThisSigned???',
-    store: new sqlitestore,
+    store: sequelizeSessionStore,
     cookie: { maxAge: 8 * 7 * 24 * 60 * 60 * 1000 } // 8 weeks
 }));
 app.use(function(req, res, next){
