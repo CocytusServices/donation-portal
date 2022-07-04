@@ -130,29 +130,48 @@ function db_getFees(startDate, endDate) {
 }
 
 // Get the total amount donated between the given start and end dates
-// TODO: Convert to Sequelize
 function db_getDonated(startDate, endDate) {
-    var query = 'SELECT SUM(amount - fee) AS total FROM transactions';
-    var params = {};
+    var total = "";
 
     // Determine the kind of date filtering we'll be using
     if (startDate && endDate) { // Between two dates
-        query += ' WHERE DATETIME(timestamp, \'unixepoch\', \'utc\') BETWEEN $startDate AND $endDate';
-        params['startDate'] = startDate;
-        params['endDate'] = endDate;
+        total = txns.sum(
+            sequelize.fn('sum', sequelize.col('amount - fee')), { 
+                where: {
+                    [Op.and]: [
+                        { timestamp: { 
+                            [Op.gt]: startDate,
+                            [Op.lt]: endDate 
+                        }},
+                        { donorId: { [Op.ne]: null }}
+                    ]
+                }
+            }
+        );
     } else if (startDate) { // After a certain date
-        query += ' WHERE DATETIME(timestamp, \'unixepoch\', \'utc\') >= $startDate';
-        params['startDate'] = startDate;
+        total = txns.sum(
+            sequelize.fn('sum', sequelize.col('amount - fee')), { 
+                where: {
+                    [Op.and]: [
+                        { timestamp: { [Op.gt]: startDate }},
+                        { donorId: { [Op.ne]: null }}
+                    ]
+                }
+            }
+        );
     } else if (endDate) { // Before a certain date
-        query += ' WHERE DATETIME(timestamp, \'unixepoch\', \'utc\') <= $endDate';
-        params['endDate'] = endDate;
+        total = txns.sum(
+            sequelize.fn('sum', sequelize.col('amount - fee')), { 
+                where: { 
+                    [Op.and]: [
+                        { timestamp: { [Op.lt]: endDate }},
+                        { donorId: { [Op.ne]: null }}
+                    ]
+                }
+            }
+        );
     }
 
-    // Ignore payments
-    query += ' AND donorId IS NOT NULL';
-
-    // Run the query
-    var total = db.prepare(query).get(params).total;
     return total ? total : 0;
 }
 
