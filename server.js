@@ -64,71 +64,13 @@ txns.hasOne(donors);
 donors.sync;
 txns.sync;
 
-
-// Initialise the database if it's empty
-// Get a list of tables in the database
-var tables = db.prepare('SELECT name FROM sqlite_master WHERE type = \'table\'').all();
-console.log(JSON.stringify(tables));
-// Make sure the donor and transaction tables exist
-if (!tables.find(table => table.name == 'donor')) {
-    db.prepare('CREATE TABLE donor (id INTEGER NOT NULL, name TEXT NOT NULL, avatar TEXT NOT NULL, PRIMARY KEY (id))').run();
-}
-if (!tables.find(table => table.name == 'transactions')) {
-    db.prepare('CREATE TABLE transactions (id INTEGER PRIMARY KEY AUTOINCREMENT, donorId INTEGER, amount REAL NOT NULL, fee REAL NOT NULL, timestamp INTEGER NOT NULL, FOREIGN KEY (donorId) REFERENCES donor (id))').run();
-}
 // Make sure the anonymous donor exists
-var anonymousDonorId = db.prepare('SELECT id FROM donor WHERE id = 0').get();
+var anonymousDonorId = donors.findAll({where: {id: 0}}); // db.prepare('SELECT id FROM donor WHERE id = 0').get();
 if (!anonymousDonorId) {
     db.prepare('INSERT INTO donor (id, name, avatar) VALUES (0, \'Anonymous donors\', \'images/unknown.png\')').run();
 }
 
 // SQL convenience functions
-// Add a new donor or update an existing one
-function db_addOrUpdateDonor(id, name, avatar) {
-    // Insert a new donor into the donor table
-    var query = 'INSERT INTO donor (id, name, avatar) VALUES ($id, $name, $avatar)';
-    var params = {
-        id: id,
-        name: name,
-        avatar: avatar
-    };
-
-    // Handle conflicts by updating the existing entry
-    query += ' ON CONFLICT (id) DO UPDATE SET name = $name, avatar = $avatar';
-
-    // Only update the existing entry if it's actually different
-    query += ' WHERE name != $name OR avatar != $avatar';
-
-    // Run the query
-    db.prepare(query).run(params);
-}
-
-// Add a donation to the database
-function db_addDonation(donorId, amount, fee, timestamp) {
-    var query = 'INSERT INTO transactions (donorId, amount, fee, timestamp) VALUES ($donorId, $amount, $fee, $timestamp)';
-    var params = {
-        donorId: donorId,
-        amount: amount,
-        fee: fee,
-        timestamp: timestamp
-    };
-
-    // Run the query
-    db.prepare(query).run(params);
-}
-
-// Add a payment to the database
-function db_addPayment(amount, fee, timestamp) {
-    var query = 'INSERT INTO transactions (amount, fee, timestamp) VALUES ($amount, $fee, $timestamp)';
-    var params = {
-        amount: amount,
-        fee: fee,
-        timestamp: timestamp
-    };
-
-    // Run the query
-    db.prepare(query).run(params);
-}
 
 // Get how much has been donated between the given start and end dates
 function db_getFunds(startDate, endDate) {
@@ -325,7 +267,11 @@ app.get('/discord/authorised', function(req, res) {
             req.session.discordAvatar = 'https://cdn.discordapp.com/avatars/' + json.id + '/' + json.avatar + '.png?size=128';
 
             // Add the user's details to the database
-            db_addOrUpdateDonor(req.session.discordId, req.session.discordName, req.session.discordAvatar);
+            donors.upsert({
+                id: req.session.discordId,
+                name: req.session.discordName,
+                avatar: req.session.discordAvatar
+            });
 
             return res.json({authorised: true});
         })
@@ -377,7 +323,11 @@ app.post('/paypal/donation', ipn.validator((err, content) => {
     // Check if this was a payment
     if (content.mc_gross == -140) {
         // Add a payment
-        db_addPayment(amount, fee, timestamp);
+        txns.create({
+            amount: amount,
+            fee: fee,
+            timestamp: timestamp
+        });
     } else {
         // Log the donation
         if (donorId != 0) {
@@ -387,7 +337,12 @@ app.post('/paypal/donation', ipn.validator((err, content) => {
         }
 
         // Add donation to the database
-        db_addDonation(donorId, amount, fee, timestamp);
+        txns.create({
+            donorId: donorId,
+            amount: amount,
+            fee: fee,
+            timestamp: timestamp
+        })
     }
 
 }, true)); // Production mode?
