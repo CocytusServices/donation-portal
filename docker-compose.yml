@@ -1,0 +1,14 @@
+version: '3.8'
+
+services:
+  donation-portal:
+    build: .
+    image: donation-portal:latest
+    restart: always
+    volumes:
+      - ./db/:/app/db/
+    environment:
+      - DISCORD_ID=631115320823644180
+      - DISCORD_SECRET=you-wish
+      - BASE_URI=https://donate.cocytus.services
+      - DB_URI=sqlite:///app/db/donations.db
