@@ -1,6 +1,7 @@
 // Config variables
 var CLIENT_ID = process.env.CLIENT_ID;
 var CLIENT_SECRET = process.env.CLIENT_SECRET;
+var DB_URI = process.env.DB || "sqlite://./db/donations.db";
 var PORT = process.env.PORT || 8080;
 var BASE_REDIRECT_URI = process.env.REDIRECT_URI || "http://localhost:8080";
 
@@ -11,12 +12,59 @@ var sqlitestore = require('connect-sqlite3')(session);
 var request = require('request-promise');
 var ipn = require('express-ipn');
 var bodyParser = require('body-parser');
-var sqlite3 = require('better-sqlite3');
+var sequelize = require('sequelize');
 var uuid = require('uuid/v4');
 
 // Node module instantiation
 var app = express();
-var db = new sqlite3('./db/donations.db', { verbose: console.log });
+var db = new sequelize(DB_URI);
+
+var donor = db.define("donor", {
+    id: {
+        type: sequelize.INTEGER,
+        primaryKey: true
+    },
+    name: {
+        type: sequelize.TEXT,
+        allowNull: false
+    },
+    avatar: {
+        type: sequelize.TEXT,
+        allowNull: false
+    },
+},
+{
+    timestamps: false,
+});
+
+var txns = db.define("transactions", {
+    id: {
+        type: sequelize.INTEGER,
+        autoIncrement: true,
+        primaryKey: true
+    },
+    amount: {
+        type: sequelize.REAL,
+        allowNull: false
+    },
+    fee: {
+        type: sequelize.REAL,
+        allowNull: false
+    },
+    timestamp: {
+        type: sequelize.INTEGER,
+        allowNull: false
+    },
+},
+{
+    timestamps: false,
+});
+
+txns.hasOne(donor);
+
+donor.sync;
+txns.sync;
+
 
 // Initialise the database if it's empty
 // Get a list of tables in the database
