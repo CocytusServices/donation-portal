@@ -19,7 +19,7 @@ var uuid = require('uuid/v4');
 var app = express();
 var db = new sequelize(DB_URI);
 
-var donor = db.define("donor", {
+var donors = db.define("donor", {
     id: {
         type: sequelize.INTEGER,
         primaryKey: true
@@ -60,9 +60,8 @@ var txns = db.define("transactions", {
     timestamps: false,
 });
 
-txns.hasOne(donor);
-
-donor.sync;
+txns.hasOne(donors);
+donors.sync;
 txns.sync;
 
 
