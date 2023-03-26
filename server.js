@@ -359,7 +359,7 @@ app.get('/api/donations', function(req, res) {
     var thisMonth = db_getDonated(monthStart, monthEnd);
 
     // Send this month's target, balance, and leaderboard
-    return res.json({target: 140, balance: balance, thisMonth: thisMonth, fees: fees, leaderboard: leaderboard});
+    return res.json({target: 120, balance: balance, thisMonth: thisMonth, fees: fees, leaderboard: leaderboard});
 });
 
 // Start the app
